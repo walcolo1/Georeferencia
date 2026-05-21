@@ -1,0 +1,14 @@
+# Data Models
+- captures
+  - id: UUID v4 (from client)
+  - data_payload: JSON/text
+  - latitude: DECIMAL
+  - longitude: DECIMAL
+  - captured_at: TIMESTAMP
+  - sync_status: ENUM
+- sync_logs
+  - id: INT AUTO_INCREMENT
+  - capture_id: UUID
+  - sync_date: TIMESTAMP
+  - target: VARCHAR
+  - status: ENUM

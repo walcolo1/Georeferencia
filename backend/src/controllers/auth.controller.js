@@ -34,6 +34,9 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Missing credentials' });
         }
 
+        console.log("Body recibido en login:", req.body);
+        console.log("Usuario buscado:", username);
+
         const [rows] = await pool.query(
             `SELECT id, name, email, password FROM users WHERE email = ?`,
             [username]

@@ -22,6 +22,10 @@ const getCaptures = async (req, res) => {
 
 const createCapture = async (req, res) => {
     try {
+        console.log("Body recibido en captura:", req.body);
+        console.log("Usuario autenticado:", req.userId);
+        console.log("Headers:", req.headers.authorization);
+
         const { barcode, payload, latitude, longitude } = req.body;
         const id = crypto.randomUUID();
         const created_by = req.userId; // Enforced from token
@@ -33,7 +37,9 @@ const createCapture = async (req, res) => {
             return res.status(400).json({ message: 'Location (latitude and longitude) is required' });
         }
 
-        const payloadStr = typeof payload === 'object' ? JSON.stringify(payload) : payload;
+        const payloadStr = (payload !== undefined && payload !== null) 
+            ? (typeof payload === 'object' ? JSON.stringify(payload) : payload) 
+            : null;
 
         await pool.query(
             `INSERT INTO captures (id, barcode, payload, latitude, longitude, captured_at, status, created_by) 

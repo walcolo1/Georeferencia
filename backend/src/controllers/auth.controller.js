@@ -38,7 +38,10 @@ const login = async (req, res) => {
         console.log("Usuario buscado:", username);
 
         const [rows] = await pool.query(
-            `SELECT id, name, email, password FROM users WHERE email = ?`,
+            `SELECT u.id, u.name, u.email, u.password, r.name AS role 
+             FROM users u 
+             LEFT JOIN roles r ON u.role_id = r.id 
+             WHERE u.email = ?`,
             [username]
         );
 
@@ -54,12 +57,12 @@ const login = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user.id, email: user.email, name: user.name },
+            { id: user.id, email: user.email, name: user.name, role: user.role },
             process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '12h' }
         );
 
-        res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+        res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
     } catch (error) {
         res.status(500).json({ message: 'Login failed', error: error.message });
     }
@@ -82,6 +85,23 @@ const seed = async (req, res) => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (role_id) REFERENCES roles(id)
+            )
+        `);
+
+        // Ensure captures table exists
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS captures (
+                id VARCHAR(36) PRIMARY KEY,
+                barcode VARCHAR(255) NOT NULL,
+                payload JSON NULL,
+                latitude DECIMAL(10,8) NOT NULL,
+                longitude DECIMAL(11,8) NOT NULL,
+                captured_at TIMESTAMP NULL DEFAULT NULL,
+                status ENUM('pending', 'synced') DEFAULT 'pending',
+                created_by INT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
             )
         `);
         

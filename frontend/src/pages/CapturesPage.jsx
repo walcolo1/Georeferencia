@@ -49,13 +49,17 @@ const CapturesPage = () => {
       
       // Send them to backend individually
       if (localPending.length > 0) {
-        await Promise.all(localPending.map(capture => 
-          api.post('/captures', {
+        await Promise.all(localPending.map(capture => {
+          const captureData = {
             barcode: capture.barcode,
             latitude: capture.latitude,
             longitude: capture.longitude
-          })
-        ));
+          };
+          console.log("Datos de captura a guardar:", captureData);
+          console.log("Token actual:", localStorage.getItem("token"));
+          console.log("URL guardado:", `${api.defaults.baseURL}/captures`);
+          return api.post('/captures', captureData);
+        }));
         
         // Remove from local IndexedDB since they are now synced
         await db.captures.bulkDelete(localPending.map(c => c.id));

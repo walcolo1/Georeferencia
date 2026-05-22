@@ -65,4 +65,45 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { register, login };
+const seed = async (req, res) => {
+    try {
+        // Ensure roles table exists and has default roles
+        await pool.query('CREATE TABLE IF NOT EXISTS roles (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50) UNIQUE NOT NULL)');
+        await pool.query('INSERT IGNORE INTO roles (id, name) VALUES (1, "Administrador"), (2, "Operativo")');
+
+        // Ensure users table exists
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                role_id INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (role_id) REFERENCES roles(id)
+            )
+        `);
+        
+        const [rows] = await pool.query(
+            `SELECT id, name, email FROM users WHERE email = ?`,
+            ['admin@test.com']
+        );
+
+        if (rows.length > 0) {
+            return res.json({ message: 'Admin user already exists', email: 'admin@test.com' });
+        }
+
+        const hashedPassword = await bcrypt.hash('123456', 10);
+        await pool.query(
+            'INSERT INTO users (name, email, password, role_id) VALUES (?, ?, ?, ?)',
+            ['Administrador Master', 'admin@test.com', hashedPassword, 1]
+        );
+
+        res.status(201).json({ message: 'Database seeded successfully. Admin user created.', email: 'admin@test.com' });
+    } catch (error) {
+        res.status(500).json({ message: 'Seeding failed', error: error.message });
+    }
+};
+
+module.exports = { register, login, seed };

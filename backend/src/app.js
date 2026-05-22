@@ -9,12 +9,21 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    "https://georeferencia-five.vercel.app",
+    "http://localhost:5173"
+  ],
   credentials: true
 }));
 app.use(express.json());
 
 // Routes
+app.get("/", (req, res) => {
+  res.json({
+    ok: true,
+    message: "Backend de Georreferencia funcionando correctamente"
+  });
+});
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/captures', capturesRoutes);

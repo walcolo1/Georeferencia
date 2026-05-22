@@ -1,8 +1,22 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
+const API_URL = import.meta.env.VITE_API_URL;
+console.log("API_URL:", API_URL);
+
+let baseURL = '/api';
+if (API_URL) {
+  if (API_URL.endsWith('/api') || API_URL.endsWith('/api/')) {
+    baseURL = API_URL;
+  } else {
+    baseURL = `${API_URL.replace(/\/$/, '')}/api`;
+  }
+}
+
+console.log("Login URL:", `${baseURL}/auth/login`);
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL,
 });
 
 api.interceptors.request.use((config) => {
